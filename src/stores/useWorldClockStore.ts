@@ -13,8 +13,8 @@ const DEFAULT_PANELS: ClockPanel[] = [
 ];
 
 const DEFAULT_ALARMS: Alarm[] = [
-  { enabled: false, utcMinutes: 8 * 60, localTime: '08:00' },
-  { enabled: false, utcMinutes: 20 * 60, localTime: '20:00' },
+  { enabled: false, localTime: '08:00' },
+  { enabled: false, localTime: '20:00' },
 ];
 
 interface WorldClockState {
@@ -31,7 +31,7 @@ interface WorldClockState {
     tz: string,
   ) => void;
   updatePanelFormat: (idx: number, hour12: boolean) => void;
-  setAlarmTime: (idx: number, localTime: string, utcMinutes: number) => void;
+  setAlarmTime: (idx: number, localTime: string) => void;
   toggleAlarm: (idx: number) => void;
 }
 
@@ -56,10 +56,10 @@ export const useWorldClockStore = create<WorldClockState>()(
             i === idx ? { ...panel, hour12 } : panel,
           ),
         })),
-      setAlarmTime: (idx, localTime, utcMinutes) =>
+      setAlarmTime: (idx, localTime) =>
         set((state) => ({
           alarms: state.alarms.map((alarm, i) =>
-            i === idx ? { ...alarm, localTime, utcMinutes } : alarm,
+            i === idx ? { ...alarm, localTime } : alarm,
           ),
         })),
       toggleAlarm: (idx) =>

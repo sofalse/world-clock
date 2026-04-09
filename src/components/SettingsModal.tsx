@@ -1,7 +1,11 @@
 'use client';
 
+import Image from 'next/image';
+import { signIn } from 'next-auth/react';
+
 import type { Alarm } from '@/hooks/useAlarms';
 import { COLORS } from '@/lib/colors';
+import googleLogo from '@/public/svg/Google_logo.svg';
 
 interface Props {
   visible: boolean;
@@ -11,7 +15,7 @@ interface Props {
   onColorChange: (idx: number) => void;
   onAlarmTime: (idx: number, time: string) => void;
   onAlarmToggle: (idx: number) => void;
-  getLocalDisplay: (alarm: Alarm) => string;
+  showGoogleSignIn: boolean;
 }
 
 export default function SettingsModal({
@@ -22,7 +26,7 @@ export default function SettingsModal({
   onColorChange,
   onAlarmTime,
   onAlarmToggle,
-  getLocalDisplay,
+  showGoogleSignIn,
 }: Props) {
   return (
     <div
@@ -70,13 +74,30 @@ export default function SettingsModal({
                   className={`alarm-toggle${alarm.enabled ? ' on' : ''}`}
                   onClick={() => onAlarmToggle(i)}
                 />
-                <div className={`alarm-local${alarm.enabled ? ' active' : ''}`}>
-                  {getLocalDisplay(alarm)}
-                </div>
               </div>
             ))}
           </div>
         </div>
+
+        {showGoogleSignIn && (
+          <button
+            className="settings-google"
+            type="button"
+            onClick={() => void signIn('google')}
+          >
+            <Image
+              className="settings-google-logo"
+              src={googleLogo}
+              alt=""
+              aria-hidden="true"
+              width={20}
+              height={20}
+            />
+            <span className="settings-google-text">
+              Sign in with Google to save your settings
+            </span>
+          </button>
+        )}
 
         <button className="settings-close" onClick={onClose}>
           Close

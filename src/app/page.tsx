@@ -1,5 +1,6 @@
 'use client';
 
+import { signOut, useSession } from 'next-auth/react';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 
 import ClockPanel from '@/components/ClockPanel';
@@ -17,7 +18,8 @@ import {
 
 export default function Home() {
   const { db, loaded, badge } = useAirportDB();
-  const { alarms, setAlarmTime, toggleAlarm, getLocalDisplay } = useAlarms();
+  const { alarms, setAlarmTime, toggleAlarm } = useAlarms();
+  const { data: session, status } = useSession();
   useScale('scale-root');
   useHydrateWorldClockStore();
 
@@ -70,6 +72,11 @@ export default function Home() {
   const modalKey = editingPanelData
     ? `${editingPanel}:${editingPanelData.iata}:${editingPanelData.tz}:${Number(loaded)}`
     : 'closed';
+  const fullName = session?.user?.name?.trim();
+  const titleLabel =
+    status === 'authenticated' && fullName
+      ? `World Time • ${fullName}`
+      : 'World Time';
 
   return (
     <main
@@ -84,11 +91,23 @@ export default function Home() {
       <div id="scale-root">
         <div className="outer-frame">
           <div className="frame-header">
-            <div className={`led-dot${loaded ? '' : ' loading'}`} />
+            <div
+              className={`led-dot${alarms[0]?.enabled ? ' active' : ''}`}
+              aria-label={
+                alarms[0]?.enabled ? 'Alarm 1 active' : 'Alarm 1 inactive'
+              }
+              title={alarms[0]?.enabled ? 'Alarm 1 active' : 'Alarm 1 inactive'}
+            />
             <div className="frame-title" onClick={() => setSettingsOpen(true)}>
-              World Time
+              {titleLabel}
             </div>
-            <div className={`led-dot${loaded ? '' : ' loading'}`} />
+            <div
+              className={`led-dot${alarms[1]?.enabled ? ' active' : ''}`}
+              aria-label={
+                alarms[1]?.enabled ? 'Alarm 2 active' : 'Alarm 2 inactive'
+              }
+              title={alarms[1]?.enabled ? 'Alarm 2 active' : 'Alarm 2 inactive'}
+            />
           </div>
 
           <div className="clocks-row">
@@ -117,6 +136,15 @@ export default function Home() {
             title for settings
           </div>
           <div className="db-badge">{badge}</div>
+          {status === 'authenticated' && (
+            <button
+              className="frame-logout"
+              type="button"
+              onClick={() => void signOut()}
+            >
+              Logout
+            </button>
+          )}
         </div>
       </div>
 
@@ -142,7 +170,7 @@ export default function Home() {
         onColorChange={applyColor}
         onAlarmTime={setAlarmTime}
         onAlarmToggle={toggleAlarm}
-        getLocalDisplay={getLocalDisplay}
+        showGoogleSignIn={status !== 'authenticated'}
       />
     </main>
   );

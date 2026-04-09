@@ -1,23 +1,29 @@
-import type { Metadata } from 'next'
-import { Analytics } from '@vercel/analytics/next'
+import { Analytics } from '@vercel/analytics/next';
 
-import './globals.css'
+import { auth } from '@/auth';
+import AuthProvider from '@/components/AuthProvider';
+
+import type { Metadata } from 'next';
+
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'World Clock',
-}
+};
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
+  const session = await auth();
+
   return (
     <html lang="en">
       <body>
-        {children}
+        <AuthProvider session={session}>{children}</AuthProvider>
         <Analytics />
       </body>
     </html>
-  )
+  );
 }

@@ -6,40 +6,11 @@ import { useWorldClockStore } from '@/stores/useWorldClockStore';
 
 export interface Alarm {
   enabled: boolean;
-  utcMinutes: number;
   localTime: string;
 }
 
 interface BrowserAudioWindow extends Window {
   webkitAudioContext?: typeof AudioContext;
-}
-
-function localTimeToUTCMinutes(timeStr: string): number {
-  const [h, m] = timeStr.split(':').map(Number);
-  const now = new Date();
-  const local = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    h,
-    m,
-    0,
-  );
-  return local.getUTCHours() * 60 + local.getUTCMinutes();
-}
-
-function utcMinutesToLocalStr(utcMin: number): string {
-  const now = new Date();
-  const utcMs = Date.UTC(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    Math.floor(utcMin / 60),
-    utcMin % 60,
-    0,
-  );
-  const local = new Date(utcMs);
-  return `${String(local.getHours()).padStart(2, '0')}:${String(local.getMinutes()).padStart(2, '0')}`;
 }
 
 function twoBeeps() {
@@ -59,7 +30,7 @@ function twoBeeps() {
       osc.type = 'sine';
       osc.frequency.value = 880;
       gain.gain.setValueAtTime(0, ctx.currentTime + delay);
-      gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + delay + 0.01);
+      gain.gain.linearRampToValueAtTime(0.8, ctx.currentTime + delay + 0.01);
       gain.gain.linearRampToValueAtTime(0, ctx.currentTime + delay + 0.12);
       osc.start(ctx.currentTime + delay);
       osc.stop(ctx.currentTime + delay + 0.13);
@@ -76,20 +47,23 @@ export function useAlarms() {
   const alarms = useWorldClockStore((state) => state.alarms);
   const setStoredAlarmTime = useWorldClockStore((state) => state.setAlarmTime);
   const toggleStoredAlarm = useWorldClockStore((state) => state.toggleAlarm);
-  const lastBeepMinute = useRef<number[]>([-1, -1]);
+  const lastTriggerKey = useRef<string[]>(['', '']);
 
   useEffect(() => {
     const id = setInterval(() => {
       const now = new Date();
-      const utcMin = now.getUTCHours() * 60 + now.getUTCMinutes();
+      const localTime = `${String(now.getHours()).padStart(2, '0')}:${String(
+        now.getMinutes(),
+      ).padStart(2, '0')}`;
+      const triggerKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${localTime}`;
 
       alarms.forEach((alarm, i) => {
         if (
           alarm.enabled &&
-          alarm.utcMinutes === utcMin &&
-          lastBeepMinute.current[i] !== utcMin
+          alarm.localTime === localTime &&
+          lastTriggerKey.current[i] !== triggerKey
         ) {
-          lastBeepMinute.current[i] = utcMin;
+          lastTriggerKey.current[i] = triggerKey;
           twoBeeps();
         }
       });
@@ -99,16 +73,11 @@ export function useAlarms() {
   }, [alarms]);
 
   function setAlarmTime(idx: number, localTime: string) {
-    setStoredAlarmTime(idx, localTime, localTimeToUTCMinutes(localTime));
+    setStoredAlarmTime(idx, localTime);
   }
 
   function toggleAlarm(idx: number) {
     toggleStoredAlarm(idx);
   }
-
-  function getLocalDisplay(alarm: Alarm) {
-    return alarm.enabled ? utcMinutesToLocalStr(alarm.utcMinutes) : '';
-  }
-
-  return { alarms, setAlarmTime, toggleAlarm, getLocalDisplay };
+  return { alarms, setAlarmTime, toggleAlarm };
 }

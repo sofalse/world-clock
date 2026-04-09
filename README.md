@@ -1,6 +1,6 @@
 # World Clock
 
-Retro-styled dual world clock built with Next.js, React, TypeScript, and Zustand.
+Retro-styled dual world clock built with Next.js, React, TypeScript, Zustand, and Auth.js.
 
 ## What it does
 
@@ -11,6 +11,7 @@ The app shows two large timezone panels side by side and lets you configure each
 - Display color is global for the whole device-style frame.
 - Two alarms can be configured in local device time.
 - Settings are persisted locally in the browser.
+- Users can sign in with Google.
 
 ## Current features
 
@@ -36,13 +37,21 @@ The app shows two large timezone panels side by side and lets you configure each
 - Global settings currently include:
   - display color theme
   - two alarms
+  - Google sign-in button for authenticating with the app
 
 ### Alarms
 
 - Two alarms are available.
 - Alarm time is edited in device local time.
-- Internally the alarm is stored in UTC minutes.
+- Alarm triggering follows the same local device time shown in the input.
 - When an alarm triggers, the app plays two short beeps.
+
+### Authentication
+
+- Google sign-in is powered by Auth.js / NextAuth.
+- When the user is signed in, the header changes from `WORLD TIME` to `WORLD TIME • {full name}`.
+- When the user is signed in, a small `LOGOUT` action appears below the database badge.
+- The Google sign-in action is available in the settings modal.
 
 ### Persistence
 
@@ -59,6 +68,7 @@ The app shows two large timezone panels side by side and lets you configure each
 - React 19
 - TypeScript
 - Zustand
+- Auth.js / NextAuth
 - Plain CSS
 - ESLint + Prettier
 - GitHub Actions CI for lint and format checks
@@ -81,6 +91,22 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+### Google auth setup
+
+Set these environment variables in `.env`:
+
+```bash
+AUTH_SECRET=your-random-secret
+AUTH_GOOGLE_ID=your-google-client-id
+AUTH_GOOGLE_SECRET=your-google-client-secret
+```
+
+For local development, configure this Google OAuth callback URL:
+
+```text
+http://localhost:3000/api/auth/callback/google
+```
+
 ## Scripts
 
 ```bash
@@ -100,11 +126,14 @@ src/
   app/
     layout.tsx
     page.tsx
+    api/auth/[...nextauth]/route.ts
     globals.css
   components/
+    AuthProvider.tsx
     ClockPanel.tsx
     IATAModal.tsx
     SettingsModal.tsx
+  auth.ts
   hooks/
     useAirportDB.ts
     useAlarms.ts
@@ -113,6 +142,8 @@ src/
   lib/
     airports.ts
     colors.ts
+  public/svg/
+    Google_logo.svg
   stores/
     useWorldClockStore.ts
 ```
