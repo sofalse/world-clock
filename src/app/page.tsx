@@ -1,48 +1,86 @@
-'use client'
-import { useState, useCallback, Fragment } from 'react'
-import { COLORS } from '@/lib/colors'
-import { useAirportDB } from '@/hooks/useAirportDB'
-import { useClock, type ClockPanel as ClockPanelData } from '@/hooks/useClock'
-import { useAlarms } from '@/hooks/useAlarms'
-import { useScale } from '@/hooks/useScale'
-import ClockPanel from '@/components/ClockPanel'
-import IATAModal from '@/components/IATAModal'
-import SettingsModal from '@/components/SettingsModal'
+'use client';
+
+import { Fragment, useCallback, useEffect, useState } from 'react';
+
+import ClockPanel from '@/components/ClockPanel';
+import IATAModal from '@/components/IATAModal';
+import SettingsModal from '@/components/SettingsModal';
+import { useAirportDB } from '@/hooks/useAirportDB';
+import { useAlarms } from '@/hooks/useAlarms';
+import { useClock } from '@/hooks/useClock';
+import { useScale } from '@/hooks/useScale';
+import { COLORS } from '@/lib/colors';
+import {
+  useHydrateWorldClockStore,
+  useWorldClockStore,
+} from '@/stores/useWorldClockStore';
 
 export default function Home() {
-  const { db, loaded, badge } = useAirportDB()
-  const { alarms, setAlarmTime, toggleAlarm, getLocalDisplay } = useAlarms()
-  useScale('scale-root')
+  const { db, loaded, badge } = useAirportDB();
+  const { alarms, setAlarmTime, toggleAlarm, getLocalDisplay } = useAlarms();
+  useScale('scale-root');
+  useHydrateWorldClockStore();
 
-  const [panels, setPanels] = useState<ClockPanelData[]>([
-    { iata: 'WAW', city: 'Warsaw',   tz: 'Europe/Warsaw' },
-    { iata: 'JFK', city: 'New York', tz: 'America/New_York' },
-  ])
-  const [hour12, setHour12] = useState(false)
-  const [colorIdx, setColorIdx] = useState(0)
-  const [editingPanel, setEditingPanel] = useState<number | null>(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const panels = useWorldClockStore((state) => state.panels);
+  const colorIdx = useWorldClockStore((state) => state.colorIdx);
+  const setColorIdx = useWorldClockStore((state) => state.setColorIdx);
+  const updatePanelIata = useWorldClockStore((state) => state.updatePanelIata);
+  const updatePanelFormat = useWorldClockStore(
+    (state) => state.updatePanelFormat,
+  );
 
-  const times = useClock(panels, hour12)
+  const [editingPanel, setEditingPanel] = useState<number | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const applyColor = useCallback((idx: number) => {
-    setColorIdx(idx)
-    const c = COLORS[idx]
-    const r = document.documentElement.style
-    r.setProperty('--clr-main',    c.main)
-    r.setProperty('--clr-sub',     c.sub)
-    r.setProperty('--clr-glow1',   c.glow1)
-    r.setProperty('--clr-glow2',   c.glow2)
-    r.setProperty('--clr-subglow', c.subglow)
-    r.setProperty('--clr-ghost',   c.ghost)
-  }, [])
+  const times = useClock(panels);
+  const reservePeriodSpace = panels.some((panel) => panel.hour12);
 
-  function handleIATAConfirm(idx: number, iata: string, city: string, tz: string) {
-    setPanels(prev => prev.map((p, i) => i === idx ? { iata, city, tz } : p))
+  const applyColor = useCallback(
+    (idx: number) => {
+      setColorIdx(Math.max(0, Math.min(idx, COLORS.length - 1)));
+    },
+    [setColorIdx],
+  );
+
+  useEffect(() => {
+    const c = COLORS[colorIdx];
+    const r = document.documentElement.style;
+    r.setProperty('--clr-main', c.main);
+    r.setProperty('--clr-sub', c.sub);
+    r.setProperty('--clr-glow1', c.glow1);
+    r.setProperty('--clr-glow2', c.glow2);
+    r.setProperty('--clr-subglow', c.subglow);
+    r.setProperty('--clr-ghost', c.ghost);
+  }, [colorIdx]);
+
+  function handleIATAConfirm(
+    idx: number,
+    iata: string,
+    city: string,
+    tz: string,
+  ) {
+    updatePanelIata(idx, iata, city, tz);
   }
 
+  function handleFormatChange(idx: number, hour12: boolean) {
+    updatePanelFormat(idx, hour12);
+  }
+
+  const editingPanelData = editingPanel !== null ? panels[editingPanel] : null;
+  const modalKey = editingPanelData
+    ? `${editingPanel}:${editingPanelData.iata}:${editingPanelData.tz}:${Number(loaded)}`
+    : 'closed';
+
   return (
-    <main style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+    <main
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        height: '100%',
+      }}
+    >
       <div id="scale-root">
         <div className="outer-frame">
           <div className="frame-header">
@@ -62,6 +100,7 @@ export default function Home() {
                   h={times[i].h}
                   m={times[i].m}
                   period={times[i].period}
+                  reservePeriodSpace={reservePeriodSpace}
                   date={times[i].date}
                   iata={times[i].iata}
                   city={times[i].city}
@@ -74,32 +113,37 @@ export default function Home() {
           </div>
 
           <div className="hint">
-            Right-click / long-press a zone to change IATA &nbsp;·&nbsp; click title for settings
+            Right-click / long-press a zone to change IATA &nbsp;·&nbsp; click
+            title for settings
           </div>
           <div className="db-badge">{badge}</div>
         </div>
       </div>
 
       <IATAModal
+        key={modalKey}
         panelIdx={editingPanel}
+        hour12={editingPanelData?.hour12 ?? false}
+        currentIata={editingPanelData?.iata ?? ''}
+        currentCity={editingPanelData?.city ?? ''}
+        currentTz={editingPanelData?.tz ?? ''}
         db={db}
         dbLoaded={loaded}
         onConfirm={handleIATAConfirm}
+        onFormatChange={handleFormatChange}
         onClose={() => setEditingPanel(null)}
       />
 
       <SettingsModal
         visible={settingsOpen}
         colorIdx={colorIdx}
-        hour12={hour12}
         alarms={alarms}
         onClose={() => setSettingsOpen(false)}
         onColorChange={applyColor}
-        onFormatChange={setHour12}
         onAlarmTime={setAlarmTime}
         onAlarmToggle={toggleAlarm}
         getLocalDisplay={getLocalDisplay}
       />
     </main>
-  )
+  );
 }

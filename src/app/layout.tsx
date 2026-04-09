@@ -1,21 +1,19 @@
-import type { Metadata } from 'next'
-import { Share_Tech_Mono } from 'next/font/google'
-import './globals.css'
+import type { Metadata } from 'next';
 
-const shareTechMono = Share_Tech_Mono({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-mono-display',
-})
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'World Clock',
-}
+};
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body className={shareTechMono.variable}>{children}</body>
+      <body>{children}</body>
     </html>
-  )
+  );
 }

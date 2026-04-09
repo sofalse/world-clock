@@ -10,18 +10,25 @@ body {
   height: 100%;
   overflow: hidden;
   background: #111;
-  font-family: sans-serif;
+  font-family: var(--font-sans);
   user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 :root {
+  --font-sans:
+    'Segoe UI', 'Aptos', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-mono-display:
+    'Consolas', 'SFMono-Regular', 'Roboto Mono', 'Liberation Mono',
+    'Courier New', monospace;
   --clr-main: #ff6b00;
   --clr-sub: #ff9a3c;
   --clr-glow1: rgba(255, 107, 0, 0.6);
   --clr-glow2: rgba(255, 107, 0, 0.3);
   --clr-subglow: rgba(255, 154, 60, 0.5);
   --clr-ghost: rgba(255, 107, 0, 0.08);
-  --font-mono-display: 'Share Tech Mono', 'Courier New', monospace;
 }
 
 /* Scale root */
@@ -62,8 +69,13 @@ body {
   animation: pulse 1s ease-in-out infinite;
 }
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .frame-title {
@@ -119,54 +131,68 @@ body {
 /* Segment display */
 .segment-wrap {
   position: relative;
-  display: inline-block;
-}
-
-.segment-ghost {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono-display);
-  font-size: clamp(52px, 8vw, 88px);
-  letter-spacing: 0.08em;
-  color: var(--clr-ghost);
-  padding: 12px 20px;
-  pointer-events: none;
-  border-radius: 8px;
-  line-height: 1;
+  display: block;
+  width: 100%;
+  max-width: 100%;
 }
 
 .segment-display {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-mono-display);
-  font-size: clamp(52px, 8vw, 88px);
+  font-size: clamp(44px, 7vw, 78px);
   font-weight: 400;
   letter-spacing: 0.08em;
   color: var(--clr-main);
-  text-shadow: 0 0 12px var(--clr-glow1), 0 0 24px var(--clr-glow2);
+  text-shadow:
+    0 0 12px var(--clr-glow1),
+    0 0 24px var(--clr-glow2);
   line-height: 1;
   background: #0d0d0d;
-  padding: 12px 20px;
+  padding: 14px 18px;
   border-radius: 8px;
   border: 1px solid #1e1e1e;
-  min-width: 240px;
+  width: 100%;
+  max-width: 100%;
   text-align: center;
+  overflow: hidden;
+}
+
+.time-main {
+  display: inline-block;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .colon {
   animation: blink 1s step-end infinite;
 }
 @keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.15; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
 }
 
 .period {
-  font-size: 0.45em;
-  margin-left: 6px;
-  vertical-align: middle;
-  opacity: 0.8;
+  position: static;
+  margin-top: 8px;
+  font-size: 0.22em;
+  letter-spacing: 0.28em;
+  opacity: 0.72;
+  line-height: 1;
+  white-space: nowrap;
+  min-height: 1em;
+}
+
+.period-empty {
+  visibility: hidden;
 }
 
 /* IATA display */
@@ -249,6 +275,10 @@ body {
   text-transform: uppercase;
 }
 
+.modal-section {
+  width: 100%;
+}
+
 .modal-input {
   font-family: var(--font-mono-display);
   font-size: 32px;
@@ -277,8 +307,12 @@ body {
   min-height: 18px;
   text-align: center;
 }
-.modal-status.ok { color: #22c55e; }
-.modal-status.err { color: #ef4444; }
+.modal-status.ok {
+  color: #22c55e;
+}
+.modal-status.err {
+  color: #ef4444;
+}
 
 .modal-btns {
   display: flex;
@@ -295,7 +329,9 @@ body {
   padding: 6px 16px;
   border-radius: 6px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
 }
 .modal-btn:hover {
   color: var(--clr-sub);
@@ -342,10 +378,16 @@ body {
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
 }
-.swatch:hover { transform: scale(1.12); }
-.swatch.active { border-color: #fff; }
+.swatch:hover {
+  transform: scale(1.12);
+}
+.swatch.active {
+  border-color: #fff;
+}
 
 /* Format toggle */
 .toggle-row {
@@ -366,7 +408,9 @@ body {
   color: #444;
   padding: 8px 0;
   cursor: pointer;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 .toggle-btn.active {
   background: #1e1e1e;
@@ -445,7 +489,9 @@ body {
   height: 14px;
   border-radius: 50%;
   background: #555;
-  transition: left 0.2s, background 0.2s;
+  transition:
+    left 0.2s,
+    background 0.2s;
 }
 .alarm-toggle.on::after {
   left: 18px;
@@ -473,7 +519,9 @@ body {
   padding: 8px 0;
   border-radius: 8px;
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
   width: 100%;
   margin-top: 4px;
 }
