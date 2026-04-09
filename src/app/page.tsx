@@ -137,13 +137,15 @@ export default function Home() {
           </div>
           <div className="db-badge">{badge}</div>
           {status === 'authenticated' && (
-            <button
-              className="frame-logout"
-              type="button"
-              onClick={() => void signOut()}
-            >
-              Logout
-            </button>
+            <div className="logout-section">
+              <button
+                className="frame-logout"
+                type="button"
+                onClick={() => void signOut()}
+              >
+                Logout
+              </button>
+            </div>
           )}
         </div>
       </div>
